@@ -392,15 +392,47 @@ void() tmpDogNextThink=
 		HuntTarget();
 	}
 }
+void() play_teleport;
+void(vector org) spawn_tfog;
+void() unSpawnDog=
+{
+	spawn_tfog(self.enemy.origin);
+	self.enemy.think = SUB_Null;
+	remove(self.enemy);	
+	play_teleport();
+}
+
+void() unSpawnDog2=
+{
+	spawn_tfog(self.origin);
+	self.think = SUB_Null;
+	play_teleport();
+}
+
+void(entity dogOwner) removeAllDogs = 
+{
+	local	entity itr;
+	itr = findradius(self.origin, 10000); //100,000 big enough for the whole level?  let's hope so!
+	while (itr)
+	{
+		if (itr.classname == "monster_dog" && (dogOwner == itr.aiment))
+		{
+			itr.nextthink = time + .1;
+			itr.think = unSpawnDog2;
+		}
+		itr = itr.chain;
+	}	
+}
 
 void(vector pos, entity targ, entity me) spawnDog =
 {
 	local entity dog;
 	local vector v,av;
-
+	local entity	timer;
+	
 	v_x = 100 * crandom();
 	v_y = 100 * crandom();
-	v_z = 100 + 50 * random();
+	v_z = 175 + 50 * random();
 	v = v*2;
 	
 	dog = spawn();
@@ -414,10 +446,11 @@ void(vector pos, entity targ, entity me) spawnDog =
 	av_y = 300 * crandom();
 	av_z = 300 * crandom();
 	dog.avelocity = av;
+	dog.classname = "monster_dog";
 	setmodel (dog, "progs/dog.mdl");
 
 	setsize (dog, '-16 -16 -24', '16 16 40');
-	dog.health = 25;
+	dog.health = 20;
 	dog.th_stand = dog_stand1;
 	dog.th_walk = dog_walk1;
 	dog.th_run = dog_run1;
@@ -434,5 +467,12 @@ void(vector pos, entity targ, entity me) spawnDog =
 		dog.goalentity = targ;
 		dog.enemy = targ;
 	}
+	
+	//timer is responsible for removing old dogs
+	timer = spawn();
+	timer.nextthink = time + 10 + 2*random();
+	timer.think = unSpawnDog;
+	timer.enemy = dog;
+		
 	// /walkmonster_start ();
 }

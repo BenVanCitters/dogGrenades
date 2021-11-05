@@ -1,25 +1,25 @@
 string(string title) GetMapName =
 {
     if(mapname == "base32b" && title == "Base 32") {
-        return "Base 32";
+        return "Base 32(Grenades make Dogs?!)";
     } else if(mapname == "death32c" && title == "Death 32") {
-        return "Death 32";
+        return "Death 32(Grenades make Dogs?!)";
     } else if(mapname == "dm1" && title == "Place of Two Deaths") {
-        return "Place of Two Deaths";
+        return "Place of Two Deaths(Grenades make Dogs?!)";
     } else if(mapname == "dm2" && title == "Claustrophobopolis") {
-        return "Claustrophobopolis";
+        return "Claustrophobopolis(Grenades make Dogs?!)";
     } else if(mapname == "dm3" && title == "The Abandoned Base") {
-        return "The Abandoned Base";
+        return "The Abandoned Base(Grenades make Dogs?!)";
     } else if(mapname == "dm4" && title == "The Bad Place") {
-        return "The Bad Place";
+        return "The Bad Place(Grenades make Dogs?!)";
     } else if(mapname == "dm5" && title == "The Cistern") {
-        return "The Cistern";
+        return "The Cistern(Grenades make Dogs?!)";
     } else if(mapname == "dm6" && title == "The Dark Zone") {
-        return "The Dark Zone";
+        return "The Dark Zone(Grenades make Dogs?!)";
     } else if(mapname == "dm7" && title == "The Edge") {
-        return "The Edge";
+        return "The Edge(Grenades make Dogs?!)";
     } else if(mapname == "dm8" && title == "Acrophobia") {
-        return "Acrophobia";
+        return "Acrophobia(Grenades make Dogs?!)";
     } else if(mapname == "e1m1" && title == "The Slipgate Complex") {
         return "The Slipgate Complex";
     } else if(mapname == "e1m2" && title == "Castle of the Damned") {

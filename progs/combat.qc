@@ -77,9 +77,9 @@ void(entity targ, entity attacker) Killed =
 	{
 		if(self.aiment.classname != "player")
 		{
-			bprint("hit a ");
-			bprint(self.aiment.classname);
-			bprint("\n");
+			//bprint("hit a ");
+			//bprint(self.aiment.classname);
+			//bprint("\n");
 			killed_monsters = killed_monsters + 1;
 			WriteByte (MSG_ALL, SVC_KILLEDMONSTER);
 

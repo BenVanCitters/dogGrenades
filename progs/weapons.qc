@@ -523,6 +523,7 @@ void() W_FireLightning =
 //=============================================================================
 
 
+void(entity dogOwner) removeAllDogs;
 void() GrenadeExplode =
 {
 	T_RadiusDamage (self, self.owner, 50, world);
@@ -533,6 +534,10 @@ void() GrenadeExplode =
 	WriteCoord (MSG_BROADCAST, self.origin_y);
 	WriteCoord (MSG_BROADCAST, self.origin_z);
 	
+	//for now it seems like dogs are a little too weak actually 
+	//so leave them in and let them teleport out if they 
+	//last too long
+	//removeAllDogs(self.owner);
 	spawnDog(self.origin, other, self.owner);
 	spawnDog(self.origin, other, self.owner);
 	spawnDog(self.origin, other, self.owner);
@@ -932,7 +937,7 @@ void() W_Attack =
 	{
 		player_rocket1();
 		W_FireGrenade();
-		self.attack_finished = time + 0.6;
+		self.attack_finished = time + 1;
 	}
 	else if (self.weapon == IT_ROCKET_LAUNCHER)
 	{

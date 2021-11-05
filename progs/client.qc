@@ -1328,7 +1328,7 @@ void(entity targ, entity attacker) ClientObituary =
 					if(attacker.aiment.classname == "player")
 					{
 						bprint (" was shot by ");
-						bprint (attacker.netname);
+						bprint (attacker.aiment.netname);
 						bprint ("'s Grunt\n");
 						targ.frags = targ.frags +1 ;//counter act the above - a hack for sure
 						attacker.aiment.frags = attacker.aiment.frags + 1;
@@ -1341,7 +1341,20 @@ void(entity targ, entity attacker) ClientObituary =
 				else if (attacker.classname == "monster_demon1")
 					bprint (" was eviscerated by a Fiend\n");
 				else if (attacker.classname == "monster_dog")
-					bprint (" was mauled by a Rottweiler\n");
+				{
+					if(attacker.aiment.classname == "player")
+					{
+						bprint (" was mauled by ");
+						bprint (attacker.aiment.netname);
+						bprint ("'s Rottweiler\n");
+						targ.frags = targ.frags +1 ;//counter act the above - a hack for sure
+						attacker.aiment.frags = attacker.aiment.frags + 1;
+					}
+					else
+					{
+						bprint (" was mauled by a Rottweiler\n");
+					}
+				}					
 				else if (attacker.classname == "monster_enforcer")
 					bprint (" was blasted by an Enforcer\n");
 				else if (attacker.classname == "monster_fish")
