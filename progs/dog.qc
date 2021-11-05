@@ -58,7 +58,7 @@ local float 	ldmg;
 	if (vlen(delta) > 100)
 		return;
 		
-	ldmg = (random() + random() + random()) * 8;
+	ldmg = (random() + random() + random()) *  25;
 	T_Damage (self.enemy, self, self, ldmg);
 };
 
@@ -73,7 +73,7 @@ void()	Dog_JumpTouch =
 	{
 		if ( vlen(self.velocity) > 300 )
 		{
-			ldmg = 10 + 10*random();
+			ldmg = 30 + 30*random();
 			T_Damage (other, self, self, ldmg);	
 		}
 	}
@@ -360,3 +360,79 @@ void() monster_dog =
 
 	walkmonster_start();
 };
+
+
+
+
+void() precacheDog =
+{
+	precache_model ("progs/h_dog.mdl");
+	precache_model ("progs/dog.mdl");
+
+	precache_sound ("dog/dattack1.wav");
+	precache_sound ("dog/ddeath.wav");
+	precache_sound ("dog/dpain1.wav");
+	precache_sound ("dog/dsight.wav");
+	precache_sound ("dog/idle.wav");
+}
+void() HuntTarget;
+void() tmpDogNextThink=
+{
+	
+	self.solid = SOLID_SLIDEBOX;
+	self.movetype = MOVETYPE_STEP;
+	self.angles_x = 0;
+	self.angles_z = 0;
+	walkmonster_start_dontgo();	
+	if(self.enemy.health)
+	{
+		//bprint(self.owner,"hit a ");
+		//bprint(self.owner,other.classname);
+		//bprint(self.owner,"\n");
+		HuntTarget();
+	}
+}
+
+void(vector pos, entity targ, entity me) spawnDog =
+{
+	local entity dog;
+	local vector v,av;
+
+	v_x = 100 * crandom();
+	v_y = 100 * crandom();
+	v_z = 100 + 50 * random();
+	v = v*2;
+	
+	dog = spawn();
+	dog.aiment = me;
+	dog.origin = pos;
+	dog.flags = dog.flags - (dog.flags & FL_ONGROUND);
+	dog.velocity = v;
+	dog.solid = SOLID_BBOX;
+	dog.movetype = MOVETYPE_BOUNCE;
+	av_x = 300 * crandom();
+	av_y = 300 * crandom();
+	av_z = 300 * crandom();
+	dog.avelocity = av;
+	setmodel (dog, "progs/dog.mdl");
+
+	setsize (dog, '-16 -16 -24', '16 16 40');
+	dog.health = 25;
+	dog.th_stand = dog_stand1;
+	dog.th_walk = dog_walk1;
+	dog.th_run = dog_run1;
+	dog.th_pain = dog_pain;
+	dog.th_die = dog_die;
+	dog.th_melee = dog_atta1;
+	dog.th_missile = dog_leap1;
+	// /walkmonster_start ();	
+	dog.nextthink = time+ 0.75;
+	dog.think = tmpDogNextThink;
+	if (targ.health)
+	{
+		dog.target = 0;
+		dog.goalentity = targ;
+		dog.enemy = targ;
+	}
+	// /walkmonster_start ();
+}

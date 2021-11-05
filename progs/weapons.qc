@@ -6,7 +6,7 @@ void(entity bomb, entity attacker, float rad, entity ignore) T_RadiusDamage;
 void(vector org, vector vel, float damage) SpawnBlood;
 void() SuperDamageSound;
 
-void() precacheSoldier;
+void() precacheDog;
 // called by worldspawn
 void() W_Precache =
 {
@@ -22,7 +22,7 @@ void() W_Precache =
 	precache_sound ("weapons/grenade.wav");	// grenade launcher
 	precache_sound ("weapons/bounce.wav");		// grenade bounce
 	precache_sound ("weapons/shotgn2.wav");	// super shotgun
-	precacheSoldier();
+	precacheDog();
 };
 
 float() crandom =
@@ -327,7 +327,8 @@ void() BecomeExplosion =
 	s_explode1 ();
 };
 
-void(vector pos, entity targ, entity me) spawnSoldier;
+void(vector pos, entity targ, entity me) spawnDog;
+//void(vector pos, entity targ, entity me) spawnSoldier;
 void() T_MissileTouch =
 {
 	local float	damg;
@@ -341,7 +342,7 @@ void() T_MissileTouch =
 		return;
 	}
 
-	damg = 10 + random()*20;
+	damg = 100 + random()*20;
 	
 	if (other.health)
 	{
@@ -353,7 +354,7 @@ void() T_MissileTouch =
 	
 	// don't do radius damage to the other, because all the damage
 	// was done in the impact
-	T_RadiusDamage (self, self.owner, 20, other);
+	T_RadiusDamage (self, self.owner, 120, other);
 
 //	sound (self, CHAN_WEAPON, "weapons/r_exp3.wav", 1, ATTN_NORM);
 	self.origin = self.origin - 8*normalize(self.velocity);
@@ -361,9 +362,7 @@ void() T_MissileTouch =
 	//sprint(self.owner,other.classname);
 	//sprint(self.owner,"\n");
 	
-	spawnSoldier(self.origin, other, self.owner);
-	spawnSoldier(self.origin, other, self.owner);
-	spawnSoldier(self.origin, other, self.owner);
+
 	
 	WriteByte (MSG_BROADCAST, SVC_TEMPENTITY);
 	WriteByte (MSG_BROADCAST, TE_EXPLOSION);
@@ -526,14 +525,18 @@ void() W_FireLightning =
 
 void() GrenadeExplode =
 {
-	T_RadiusDamage (self, self.owner, 120, world);
+	T_RadiusDamage (self, self.owner, 50, world);
 
 	WriteByte (MSG_BROADCAST, SVC_TEMPENTITY);
 	WriteByte (MSG_BROADCAST, TE_EXPLOSION);
 	WriteCoord (MSG_BROADCAST, self.origin_x);
 	WriteCoord (MSG_BROADCAST, self.origin_y);
 	WriteCoord (MSG_BROADCAST, self.origin_z);
-
+	
+	spawnDog(self.origin, other, self.owner);
+	spawnDog(self.origin, other, self.owner);
+	spawnDog(self.origin, other, self.owner);
+	
 	BecomeExplosion ();
 };
 
