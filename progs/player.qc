@@ -456,7 +456,7 @@ vector(float dm) VelocityForDamage =
 	return v;
 };
 
-void(string gibname, float dm) ThrowGib =
+entity(string gibname, float dm) ThrowGib =
 {
 	local	entity new;
 
@@ -475,6 +475,7 @@ void(string gibname, float dm) ThrowGib =
 	new.nextthink = time + 10 + random()*10;
 	new.frame = 0;
 	new.flags = 0;
+	return new;
 };
 
 void(string gibname, float dm) ThrowHead =

@@ -11,17 +11,15 @@ void() precacheDog;
 void() W_Precache =
 {
 	precache_sound ("weapons/r_exp3.wav");	// new rocket explosion
-	precache_sound ("weapons/rocket1i.wav");	// spike gun
 	precache_sound ("weapons/sgun1.wav");
 	precache_sound ("weapons/guncock.wav");	// player shotgun
-	precache_sound ("weapons/ric1.wav");	// ricochet (used in c code)
-	precache_sound ("weapons/ric2.wav");	// ricochet (used in c code)
-	precache_sound ("weapons/ric3.wav");	// ricochet (used in c code)
-	precache_sound ("weapons/spike2.wav");	// super spikes
-	precache_sound ("weapons/tink1.wav");	// spikes tink (used in c code)
+	
+
 	precache_sound ("weapons/grenade.wav");	// grenade launcher
 	precache_sound ("weapons/bounce.wav");		// grenade bounce
 	precache_sound ("weapons/shotgn2.wav");	// super shotgun
+	precache_sound ("zombie/z_miss.wav");	// dog head nail
+	precache_sound ("zombie/z_hit.wav");	// dog head nail
 	precacheDog();
 };
 
@@ -635,7 +633,7 @@ void(vector org, vector dir) launch_spike =
 	newmis.classname = "spike";
 	newmis.think = SUB_Remove;
 	newmis.nextthink = time + 6;
-	setmodel (newmis, "progs/spike.mdl");
+	setmodel (newmis, "progs/h_dog.mdl");
 	setsize (newmis, VEC_ORIGIN, VEC_ORIGIN);		
 	setorigin (newmis, org);
 
@@ -646,13 +644,14 @@ void() W_FireSuperSpikes =
 {
 	local vector	dir;
 	
-	sound (self, CHAN_WEAPON, "weapons/spike2.wav", 1, ATTN_NORM);
+	//sound (self, CHAN_WEAPON, "weapons/spike2.wav", .5, ATTN_NORM);
+	sound (self, CHAN_WEAPON, "dog/dsight.wav", .4, ATTN_NORM);
 	self.attack_finished = time + 0.2;
 	self.currentammo = self.ammo_nails = self.ammo_nails - 2;
 	dir = aim (self, 1000);
-	launch_spike (self.origin + '0 0 16', dir);
+	launch_spike (self.origin + '0 0 16'+v_up*-15, dir);
 	newmis.touch = superspike_touch;
-	setmodel (newmis, "progs/s_spike.mdl");
+	setmodel (newmis, "progs/h_dog.mdl");
 	setsize (newmis, VEC_ORIGIN, VEC_ORIGIN);		
 	self.punchangle_x = -2;
 };
@@ -676,20 +675,23 @@ void(float ox) W_FireSpikes =
 		return;
 	}
 
-	sound (self, CHAN_WEAPON, "weapons/rocket1i.wav", 1, ATTN_NORM);
+	//sound (self, CHAN_WEAPON, "weapons/rocket1i.wav", .5, ATTN_NORM);
+	sound (self, CHAN_WEAPON, "dog/dsight.wav", .4, ATTN_NORM);
 	self.attack_finished = time + 0.2;
 	self.currentammo = self.ammo_nails = self.ammo_nails - 1;
 	dir = aim (self, 1000);
-	launch_spike (self.origin + '0 0 16' + v_right*ox, dir);
+	launch_spike (self.origin + '0 0 16' +v_up*-15+ v_right*ox, dir);
 
 	self.punchangle_x = -2;
 };
 
 
-
+entity(string gibname, float dm) ThrowGib;
 .float hit_z;
 void() spike_touch =
 {
+	local entity head_gib;
+	local vector head_vel;
 	if (other == self.owner)
 		return;
 
@@ -703,12 +705,7 @@ void() spike_touch =
 	}
 	
 // hit something that bleeds
-	if (other.takedamage)
-	{
-		spawn_touchblood (9);
-		T_Damage (other, self, self.owner, 9);
-	}
-	else
+	if ((self.classname == "wizspike") || (self.classname == "knightspike"))
 	{
 		WriteByte (MSG_BROADCAST, SVC_TEMPENTITY);
 		
@@ -716,13 +713,48 @@ void() spike_touch =
 			WriteByte (MSG_BROADCAST, TE_WIZSPIKE);
 		else if (self.classname == "knightspike")
 			WriteByte (MSG_BROADCAST, TE_KNIGHTSPIKE);
-		else
-			WriteByte (MSG_BROADCAST, TE_SPIKE);
+
 		WriteCoord (MSG_BROADCAST, self.origin_x);
 		WriteCoord (MSG_BROADCAST, self.origin_y);
 		WriteCoord (MSG_BROADCAST, self.origin_z);
 	}
+	else 
+	{
+		if (other.takedamage)
+		{
+			spawn_touchblood (9);
+			T_Damage (other, self, self.owner, 9);
+			sound (self, CHAN_WEAPON, "zombie/z_hit.wav", .4, ATTN_NORM);
+		}
+		else
+		{
+			spawn_touchblood (9);
+			sound (self, CHAN_WEAPON, "zombie/z_miss.wav", .4, ATTN_NORM);
+		}
+		head_gib = ThrowGib("progs/h_dog.mdl",10);		
 
+		traceline(self.origin-self.velocity*.1, self.origin+self.velocity*1, FALSE, self);
+		if (trace_ent.takedamage)
+		{
+			head_vel_x = random() - 0.5;
+			head_vel_y = random() - 0.5;
+			head_vel_z = random() - 0.5;
+			head_vel = normalize(head_vel);
+			head_vel = head_vel * .2*vlen(self.velocity);	
+		}
+		else
+		{
+			//draw_line( vector start, vector end, float colormap, float lifetime, float depthtest );
+			//draw_line( self.origin,self.origin+trace_plane_normal*3, 2, time+3, 0 );
+			//trace_ent
+			//reflect off surface
+			head_vel = self.velocity - 2*(self.velocity*trace_plane_normal)*trace_plane_normal;
+			//reduce velocity
+			head_vel = head_vel*.2;
+		}
+		head_gib.velocity = head_vel;
+	}
+	
 	remove(self);
 
 };
@@ -741,19 +773,18 @@ void() superspike_touch =
 		return;
 	}
 	
+	ThrowGib("progs/h_dog.mdl",10);
 // hit something that bleeds
 	if (other.takedamage)
 	{
 		spawn_touchblood (18);
 		T_Damage (other, self, self.owner, 18);
+		sound (self, CHAN_WEAPON, "zombie/z_hit.wav", .4, ATTN_NORM);
 	}
 	else
 	{
-		WriteByte (MSG_BROADCAST, SVC_TEMPENTITY);
-		WriteByte (MSG_BROADCAST, TE_SUPERSPIKE);
-		WriteCoord (MSG_BROADCAST, self.origin_x);
-		WriteCoord (MSG_BROADCAST, self.origin_y);
-		WriteCoord (MSG_BROADCAST, self.origin_z);
+		sound (self, CHAN_WEAPON, "zombie/z_miss.wav", .4, ATTN_NORM);
+		spawn_touchblood (9);
 	}
 
 	remove(self);
