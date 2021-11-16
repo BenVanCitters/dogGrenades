@@ -372,6 +372,43 @@ void() T_MissileTouch =
 };
 
 
+//spawns a debug missile to help illustrate positions in game
+entity(vector org) spawnTempRocket =
+{
+	local entity missile;
+	missile = spawn ();
+
+	missile.movetype = MOVETYPE_FLYMISSILE;
+	missile.solid = SOLID_BBOX;
+	missile.classname = "tmissile";
+
+	// set missile speed	
+	//missile.velocity = reflected_vel;
+	//missile.angles = vectoangles(missile.velocity);		
+	//missile.touch = T_MissileTouch;
+
+	// set missile duration
+	missile.nextthink = time + 10;
+	missile.think = SUB_Remove;
+	setmodel (missile, "progs/missile.mdl");
+	setsize (missile, '0 0 0', '0 0 0');		
+	setorigin (missile, org);
+	return missile;
+}
+
+void(vector start, vector end, float count) traceLineWRockets=
+{
+	local float pct, i;
+	local vector diff;
+	diff = end-start;
+	
+	while(i<count)
+	{
+		pct = i*1.0/count;
+		spawnTempRocket(start + diff*pct);
+		i = i +1;	
+	}
+}
 
 /*
 ================

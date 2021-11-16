@@ -34,6 +34,7 @@ $frame walk1 walk2 walk3 walk4 walk5 walk6 walk7 walk8
 void() dog_leap1;
 void() dog_run1;
 
+void(entity e) setLeapFrame={e.frame = $leap4;}
 /*
 ================
 dog_bite
