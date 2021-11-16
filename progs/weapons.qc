@@ -415,6 +415,74 @@ void(vector start, vector end, float count) traceLineWRockets=
 W_FireRocket
 ================
 */
+
+//fid a target for the homing dog-missile - this will be the thing under the reticule or something close to it
+entity() findRocketDogTarget =
+{
+	local entity head;
+	local	vector	source;
+	local	vector	endpos;
+	local float frac;
+
+	makevectors (self.v_angle);
+	source = self.origin + '0 0 16';
+	//traceLineWRockets(source,source + v_forward*2000,20);
+	traceline (source, source + v_forward*2000, FALSE, self);
+	//spawnTempRocket(trace_endpos);
+	//we need to cache these results because 'candamage' will overwrite 
+	//the global raycast results when we call it below and that interferes with the algorithm :(
+	frac = trace_fraction;
+	endpos = trace_endpos;
+	head = trace_ent;
+	if(head && head.takedamage )
+	{
+		if (CanDamage (head, self))
+		{
+			//spawnTempRocket(head.origin);
+			//sprint(self, "traceline hit something - a ");		
+			//sprint(self, head.classname);		
+			//sprint(self, " at frac ");		
+			//sprint(self, ftos(frac));		
+			//sprint(self, "\n");
+			return head;
+		}
+	}
+	//we failed to find something right under the reticule - so, look 
+	//spatially near what was under the reticule for something
+	head = findradius(endpos, 250);
+	local entity closest;
+	local float shortestDist, curDist;
+	shortestDist = 99999999;
+	curDist = 1;
+	//find the closest damageable entity to the end of the raycast...
+	while (head)
+	{
+		//sprint(self, "findradius is iterating ");
+		//sprint(self, head.classname);
+		//sprint(self, "\n");
+		if (head.takedamage && (CanDamage (head, self)))
+		{		
+			curDist= vlen(head.origin-endpos);
+			if (curDist < shortestDist )
+			{
+				shortestDist = curDist;
+				closest = head;
+			}
+		}
+		head = head.chain;
+	}
+	if(closest)
+	{
+		//spawnTempRocket(closest.origin);
+		//sprint(self, "findradius found ");
+		//sprint(self, closest.classname);
+		//sprint(self, "\n");
+		return closest;
+	}	
+	//sprint(self, "found nothing!\n");
+	
+	return 0;
+}
 void() W_FireRocket =
 {
 	local	entity missile;
