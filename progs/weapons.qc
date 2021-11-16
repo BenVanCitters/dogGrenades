@@ -483,40 +483,83 @@ entity() findRocketDogTarget =
 	
 	return 0;
 }
+
+void() xxShalHome;
+void(entity e) setLeapFrame;
 void() W_FireRocket =
 {
 	local	entity missile;
+	local entity dogTarget;
 	
 	self.currentammo = self.ammo_rockets = self.ammo_rockets - 1;
 	
 	sound (self, CHAN_WEAPON, "weapons/sgun1.wav", 1, ATTN_NORM);
 
 	self.punchangle_x = -2;
-
 	missile = spawn ();
 	missile.owner = self;
 	missile.movetype = MOVETYPE_FLYMISSILE;
 	missile.solid = SOLID_BBOX;
 	missile.classname = "missile";
-		
-// set missile speed	
+			
 
 	makevectors (self.v_angle);
-	missile.velocity = aim(self, 1000);
-	missile.velocity = missile.velocity * 1000;
-	missile.angles = vectoangles(missile.velocity);
-	
-	missile.touch = T_MissileTouch;
-	
-// set missile duration
-	missile.nextthink = time + 5;
-	missile.think = SUB_Remove;
+	dogTarget = findRocketDogTarget();
+	//if we have a target then home - otherwise fly like a rocket
+	if(dogTarget)
+	{
+		local	vector	dir;
+		local	float	dist, flytime;
 
-	setmodel (missile, "progs/missile.mdl");
+		dir = normalize((dogTarget.origin + '0 0 10') - self.origin);
+		dist = vlen (dogTarget.origin - self.origin);
+		flytime = dist * 0.002;
+		if (flytime < 0.1)
+			flytime = 0.1;
+
+		missile.origin = self.origin + '0 0 10';		
+		missile.velocity = v_forward * 100;
+		missile.nextthink = flytime + time;
+		missile.think = xxShalHome;
+		missile.enemy = dogTarget;
+	}
+	else
+	{		
+		// set missile speed	
+		missile.velocity = aim(self, 1000);
+		missile.velocity = missile.velocity * 1000;
+		// set missile duration
+		missile.nextthink = time + 5;
+		missile.think = SUB_Remove;
+
+	}
+	missile.angles = vectoangles(missile.velocity);
+	missile.touch = T_MissileTouch;
+	setmodel (missile, "progs/dog.mdl");
+	setLeapFrame(missile);
 	setsize (missile, '0 0 0', '0 0 0');		
 	setorigin (missile, self.origin + v_forward*8 + '0 0 16');
 };
 
+
+void() xxShalHome =
+{
+	sound (self, CHAN_VOICE, "dog/idle.wav", 1, ATTN_IDLE);
+	local vector	dir, vtemp;
+	vtemp = self.enemy.origin + '0 0 10';
+	if (self.enemy.health < 1)
+	{
+		remove(self);
+		return;
+	}
+	dir = normalize(vtemp - self.origin);
+
+	self.velocity = dir * 100;
+	self.nextthink = time + 0.2;
+	self.think = xxShalHome;	
+	
+	self.angles = vectoangles(self.velocity);
+};
 /*
 ===============================================================================
 
