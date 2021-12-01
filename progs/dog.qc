@@ -95,7 +95,7 @@ void()	Dog_JumpTouch =
 		}
 		return;	// not on ground yet
 	}
-
+	self.angles_x = 0;
 	self.touch = SUB_Null;
 	self.think = dog_run1;
 	self.nextthink = time + 0.1;
@@ -171,6 +171,9 @@ void() dog_leap6	=[	$leap6,		dog_leap7	] {};
 void() dog_leap7	=[	$leap7,		dog_leap8	] {};
 void() dog_leap8	=[	$leap8,		dog_leap9	] {};
 void() dog_leap9	=[	$leap9,		dog_leap9	] {};
+
+void() dog_rocket1 = [$leap3,		dog_rocket2]{};
+void() dog_rocket2 = [$leap3,		dog_rocket1]{};
 
 void() dog_pain1	=[	$pain1 ,	dog_pain2	] {};
 void() dog_pain2	=[	$pain2 ,	dog_pain3	] {};
@@ -425,7 +428,7 @@ void(entity dogOwner) removeAllDogs =
 	}	
 }
 
-void(vector pos, entity targ, entity me) spawnDog =
+entity(vector pos, entity targ, entity me) spawnDog =
 {
 	local entity dog;
 	local vector v,av;
@@ -474,6 +477,6 @@ void(vector pos, entity targ, entity me) spawnDog =
 	timer.nextthink = time + 10 + 2*random();
 	timer.think = unSpawnDog;
 	timer.enemy = dog;
-		
+	return dog;
 	// /walkmonster_start ();
 }

@@ -43,7 +43,9 @@ void() W_FireAxe =
 	traceline (source, source + v_forward*64, FALSE, self);
 	if (trace_fraction == 1.0)
 		return;
-	
+	//sprint(self, "frac: " );
+	//sprint(self, ftos(trace_fraction));
+	//sprint(self, "\n");
 	org = trace_endpos - v_forward*4;
 
 	if (trace_ent.takedamage)
@@ -325,7 +327,8 @@ void() BecomeExplosion =
 	s_explode1 ();
 };
 
-void(vector pos, entity targ, entity me) spawnDog;
+entity(string gibname, float dm) ThrowGib;
+entity(vector pos, entity targ, entity me) spawnDog;
 //void(vector pos, entity targ, entity me) spawnSoldier;
 void() T_MissileTouch =
 {
@@ -340,19 +343,19 @@ void() T_MissileTouch =
 		return;
 	}
 
-	damg = 100 + random()*20;
+	damg = 50 + random()*20;
 	
 	if (other.health)
 	{
 		if (other.classname == "monster_shambler")
 			damg = damg * 0.5;	// mostly immune
-		T_Damage (other, self, self.owner, damg );
+		T_Damage (other, self, self.owner, damg );		
 	}
 
 	
 	// don't do radius damage to the other, because all the damage
 	// was done in the impact
-	T_RadiusDamage (self, self.owner, 120, other);
+	T_RadiusDamage (self, self.owner, 70, other);
 
 //	sound (self, CHAN_WEAPON, "weapons/r_exp3.wav", 1, ATTN_NORM);
 	self.origin = self.origin - 8*normalize(self.velocity);
@@ -360,15 +363,12 @@ void() T_MissileTouch =
 	//sprint(self.owner,other.classname);
 	//sprint(self.owner,"\n");
 	
-
-	
-	WriteByte (MSG_BROADCAST, SVC_TEMPENTITY);
-	WriteByte (MSG_BROADCAST, TE_EXPLOSION);
-	WriteCoord (MSG_BROADCAST, self.origin_x);
-	WriteCoord (MSG_BROADCAST, self.origin_y);
-	WriteCoord (MSG_BROADCAST, self.origin_z);
-
-	BecomeExplosion ();
+	sound (self, CHAN_VOICE, "player/udeath.wav", 1, ATTN_NORM);
+	ThrowGib ("progs/gib3.mdl", -70);
+	ThrowGib ("progs/gib3.mdl", -70);
+	ThrowGib ("progs/gib3.mdl", -70);
+	ThrowGib ("progs/h_dog.mdl", -70);
+	remove(self);
 };
 
 
@@ -415,6 +415,34 @@ void(vector start, vector end, float count) traceLineWRockets=
 W_FireRocket
 ================
 */
+void() walkmonster_start_go;
+void() dog_leap3;
+void()	Dog_JumpTouch;
+void() spawnJumpingDog=
+{
+	local entity dog = spawnDog(self.origin, self.enemy, self.owner);
+	local entity tself = self;
+	
+	dog.solid = SOLID_SLIDEBOX;	
+	dog.movetype = MOVETYPE_STEP;
+	local vector toEnemy = self.enemy.origin - self.origin;
+	toEnemy = normalize(toEnemy);
+	dog.angles = vectoangles(toEnemy);
+	dog.avelocity = '0 0 0';
+	dog.velocity = toEnemy * vlen(self.velocity)*1.5 + '0 0 100';
+	self = dog;
+		walkmonster_start_go();
+		//undo droptofloor which is called in walkmonster start go
+		setorigin (dog, self.origin);
+		self.touch = Dog_JumpTouch;
+		makevectors (self.angles);
+		
+		self.origin_z = self.origin_z + 1;
+		if (self.flags & FL_ONGROUND)
+			self.flags = self.flags - FL_ONGROUND;
+		dog_leap3();
+	self = tself;
+}
 
 //fid a target for the homing dog-missile - this will be the thing under the reticule or something close to it
 entity() findRocketDogTarget =
@@ -460,7 +488,7 @@ entity() findRocketDogTarget =
 		//sprint(self, "findradius is iterating ");
 		//sprint(self, head.classname);
 		//sprint(self, "\n");
-		if (head.takedamage && (CanDamage (head, self)))
+		if (head != self && head.takedamage && (CanDamage (head, self)))
 		{		
 			curDist= vlen(head.origin-endpos);
 			if (curDist < shortestDist )
@@ -484,7 +512,7 @@ entity() findRocketDogTarget =
 	return 0;
 }
 
-void() xxShalHome;
+void() DogHome;
 void(entity e) setLeapFrame;
 void() W_FireRocket =
 {
@@ -518,16 +546,16 @@ void() W_FireRocket =
 			flytime = 0.1;
 
 		missile.origin = self.origin + '0 0 10';		
-		missile.velocity = v_forward * 100;
+		missile.velocity = v_forward * 350;
 		missile.nextthink = flytime + time;
-		missile.think = xxShalHome;
+		missile.think = DogHome;
 		missile.enemy = dogTarget;
 	}
 	else
 	{		
 		// set missile speed	
-		missile.velocity = aim(self, 1000);
-		missile.velocity = missile.velocity * 1000;
+		missile.velocity = aim(self, 350);
+		missile.velocity = missile.velocity * 350;
 		// set missile duration
 		missile.nextthink = time + 5;
 		missile.think = SUB_Remove;
@@ -542,9 +570,8 @@ void() W_FireRocket =
 };
 
 
-void() xxShalHome =
+void() DogHome =
 {
-	sound (self, CHAN_VOICE, "dog/idle.wav", 1, ATTN_IDLE);
 	local vector	dir, vtemp;
 	vtemp = self.enemy.origin + '0 0 10';
 	if (self.enemy.health < 1)
@@ -552,14 +579,22 @@ void() xxShalHome =
 		remove(self);
 		return;
 	}
-	dir = normalize(vtemp - self.origin);
-
-	self.velocity = dir * 100;
+	dir = vtemp - self.origin;
+	if(CanDamage(self.enemy, self) && vlen(dir) < 200)
+	{
+		spawnJumpingDog();
+		remove(self);
+		return;
+	}
+	dir = normalize(dir);
+	sound (self, CHAN_VOICE, "dog/idle.wav", 1, ATTN_IDLE);
+	self.velocity = dir * 350;
 	self.nextthink = time + 0.2;
-	self.think = xxShalHome;	
+	self.think = DogHome;	
 	
 	self.angles = vectoangles(self.velocity);
 };
+
 /*
 ===============================================================================
 
@@ -834,7 +869,6 @@ void(float ox) W_FireSpikes =
 };
 
 
-entity(string gibname, float dm) ThrowGib;
 .float hit_z;
 void() spike_touch =
 {
@@ -909,6 +943,8 @@ void() spike_touch =
 
 void() superspike_touch =
 {
+	local entity head_gib;
+	local vector head_vel;
 	if (other == self.owner)
 		return;
 
@@ -921,7 +957,7 @@ void() superspike_touch =
 		return;
 	}
 	
-	ThrowGib("progs/h_dog.mdl",10);
+	
 // hit something that bleeds
 	if (other.takedamage)
 	{
@@ -934,6 +970,26 @@ void() superspike_touch =
 		sound (self, CHAN_WEAPON, "zombie/z_miss.wav", .4, ATTN_NORM);
 		spawn_touchblood (9);
 	}
+
+	head_gib = ThrowGib("progs/h_dog.mdl",10);		
+
+	traceline(self.origin-self.velocity*.1, self.origin+self.velocity*1, FALSE, self);
+	if (trace_ent.takedamage)
+	{
+		head_vel_x = random() - 0.5;
+		head_vel_y = random() - 0.5;
+		head_vel_z = random() - 0.5;
+		head_vel = normalize(head_vel);
+		head_vel = head_vel * .2*vlen(self.velocity);	
+	}
+	else
+	{
+		//reflect off surface
+		head_vel = self.velocity - 2*(self.velocity*trace_plane_normal)*trace_plane_normal;
+		//reduce velocity
+		head_vel = head_vel*.2;
+	}
+	head_gib.velocity = head_vel;
 
 	remove(self);
 
