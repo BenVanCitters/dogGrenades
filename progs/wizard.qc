@@ -201,7 +201,7 @@ void() Wiz_FastFire =
 	
 		vec = normalize(dst - self.origin);
 		sound (self, CHAN_WEAPON, "wizard/wattack.wav", 1, ATTN_NORM);
-		launch_spike (self.origin, vec);
+		launch_spike (self.origin, vec,1000);
 		newmis.velocity = vec*600;
 		newmis.owner = self.owner;
 		newmis.classname = "wizspike";

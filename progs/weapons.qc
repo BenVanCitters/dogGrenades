@@ -234,6 +234,7 @@ Used by shotgun, super shotgun, and enemy soldier firing
 Go to the trouble of combining multiple pellets into a single damage call.
 ================
 */
+void(vector org, vector dir, float speed) launch_spike;
 void(float shotcount, vector dir, vector spread) FireBullets =
 {
 	local	vector direction;
@@ -248,14 +249,15 @@ void(float shotcount, vector dir, vector spread) FireBullets =
 	while (shotcount > 0)
 	{
 		direction = dir + crandom()*spread_x*v_right + crandom()*spread_y*v_up;
-
-		traceline (src, src + direction*2048, FALSE, self);
-		if (trace_fraction != 1.0)
-			TraceAttack (4, direction);
+		local float speed = 1500+random()*100;
+		launch_spike(src, direction,speed); 
+		//traceline (src, src + direction*2048, FALSE, self);
+		//if (trace_fraction != 1.0)
+			//TraceAttack (4, direction);
 
 		shotcount = shotcount - 1;
 	}
-	ApplyMultiDamage ();
+	//ApplyMultiDamage ();
 };
 
 /*
@@ -273,7 +275,7 @@ void() W_FireShotgun =
 	
 	self.currentammo = self.ammo_shells = self.ammo_shells - 1;
 	dir = aim (self, 100000);
-	FireBullets (6, dir, '0.04 0.04 0');
+	FireBullets (3, dir, '0.04 0.04 0');
 };
 
 
@@ -298,7 +300,7 @@ void() W_FireSuperShotgun =
 	
 	self.currentammo = self.ammo_shells = self.ammo_shells - 2;
 	dir = aim (self, 100000);
-	FireBullets (14, dir, '0.14 0.08 0');
+	FireBullets (7, dir, '0.14 0.08 0');
 };
 
 
@@ -803,7 +805,7 @@ launch_spike
 Used for both the player and the ogre
 ===============
 */
-void(vector org, vector dir) launch_spike =
+void(vector org, vector dir,float speed) launch_spike =
 {
 	newmis = spawn ();
 	newmis.owner = self;
@@ -820,7 +822,7 @@ void(vector org, vector dir) launch_spike =
 	setsize (newmis, VEC_ORIGIN, VEC_ORIGIN);		
 	setorigin (newmis, org);
 
-	newmis.velocity = dir * 1000;
+	newmis.velocity = dir * speed;
 };
 
 void() W_FireSuperSpikes =
@@ -832,7 +834,7 @@ void() W_FireSuperSpikes =
 	self.attack_finished = time + 0.2;
 	self.currentammo = self.ammo_nails = self.ammo_nails - 2;
 	dir = aim (self, 1000);
-	launch_spike (self.origin + '0 0 16'+v_up*-15, dir);
+	launch_spike (self.origin + '0 0 16'+v_up*-15, dir,1000);
 	newmis.touch = superspike_touch;
 	setmodel (newmis, "progs/h_dog.mdl");
 	setsize (newmis, VEC_ORIGIN, VEC_ORIGIN);		
@@ -863,7 +865,7 @@ void(float ox) W_FireSpikes =
 	self.attack_finished = time + 0.2;
 	self.currentammo = self.ammo_nails = self.ammo_nails - 1;
 	dir = aim (self, 1000);
-	launch_spike (self.origin + '0 0 16' +v_up*-15+ v_right*ox, dir);
+	launch_spike (self.origin + '0 0 16' +v_up*-15+ v_right*ox, dir,1000);
 
 	self.punchangle_x = -2;
 };

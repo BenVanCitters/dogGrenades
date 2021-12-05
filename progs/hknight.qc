@@ -72,7 +72,7 @@ void(float offset) hknight_shot =
 	vec = normalize (v_forward);
 	vec_z = 0 - vec_z + (random() - 0.5)*0.1;
 	
-	launch_spike (org, vec);
+	launch_spike (org, vec,1000);
 	newmis.classname = "knightspike";
 	setmodel (newmis, "progs/k_spike.mdl");
 	setsize (newmis, VEC_ORIGIN, VEC_ORIGIN);		
